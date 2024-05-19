@@ -79,7 +79,7 @@ class M_data extends CI_Model
 			$query = $this->db->query("SELECT * FROM master_toko WHERE kdtk NOT IN ('$kd_toko_string')");
 			$offline_count = $query->num_rows();
 		} else {
-			$offline_count = 0; // Jika tidak ada toko online, maka semua toko dianggap offline
+			$offline_count = 0;
 		}
 
 		return $offline_count;
@@ -93,10 +93,10 @@ class M_data extends CI_Model
 
 		$second_db = $this->load->database('server_2', TRUE);
 		$subquery = $second_db->query("SELECT DISTINCT toko
-               FROM $trxEdc 
-               WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
-               AND TID != ' '
-               AND kode_bank = 'B01'");
+           FROM $trxEdc 
+           WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
+           AND TID != ' '
+           AND kode_bank = 'B01'");
 
 		$toko_data = $subquery->result_array();
 		$kd_toko_array = array();
@@ -110,12 +110,23 @@ class M_data extends CI_Model
 		$query = $this->db->query("SELECT * FROM master_toko");
 		$master_toko_data = $query->result_array();
 
+		// Query untuk mendapatkan toko yang rusak fisik dari tabel edc_rusak
+		$edc_rusak_query = $this->db->query("SELECT DISTINCT kdtk FROM edc_rusak");
+		$edc_rusak_data = $edc_rusak_query->result_array();
+		$edc_rusak_array = array();
+
+		foreach ($edc_rusak_data as $rusak) {
+			$edc_rusak_array[] = $rusak['kdtk'];
+		}
+
 		$result = array();
 
 		foreach ($master_toko_data as $toko) {
 			$status = 'Offline'; // Default status offline
 
-			if (in_array($toko['kdtk'], $kd_toko_array)) {
+			if (in_array($toko['kdtk'], $edc_rusak_array)) {
+				$status = 'Rusak Fisik Edc';
+			} elseif (in_array($toko['kdtk'], $kd_toko_array)) {
 				$status = 'Online';
 			}
 
@@ -126,9 +137,34 @@ class M_data extends CI_Model
 			);
 		}
 
+		// sortir keterangan 
+		usort($result, function ($a, $b) {
+			if ($a['status'] == $b['status']) {
+				return 0;
+			}
+			return ($a['status'] == 'Rusak Fisik Edc') ? -1 : 1;
+		});
+
 		return $result;
 	}
-}
 
-/* End of file M_pegawai.php */
-/* Location: ./application/models/M_pegawai.php */
+
+	public function bca_rusak($table)
+	{
+		return $this->db->get($table);
+	}
+
+	public function offline_bca_rusak()
+	{
+		$data =  $this->db->get('edc_rusak');
+
+		return $data->num_rows();
+	}
+
+	public function insert_data_excel($data)
+	{
+		$this->db->insert_batch('edc_rusak', $data);
+
+		return $this->db->affected_rows();
+	}
+}

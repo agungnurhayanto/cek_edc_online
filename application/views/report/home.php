@@ -4,13 +4,9 @@
 
 <div class="box">
           <div class="box-header">
-                    <!-- <div class="col-md-6" style="padding: 0;">
-                              <button class="form-control btn btn-success" data-toggle="modal"
-                                        data-target="#tambah-report"><i class="glyphicon glyphicon-plus-sign"></i>
-                                        Tambah Data</button>
-                    </div> -->
-                    <div class="col-md-3">
-                              <a href="<?php echo base_url('Report/export'); ?>" class="form-control btn btn-default"><i
+
+                    <div class="col-md-6">
+                              <a href="<?php echo base_url('Report/export'); ?>" class="form-control btn btn-warning"><i
                                                   class="glyphicon glyphicon glyphicon-floppy-save"></i> Export Data
                                         Excel</a>
                     </div>
@@ -39,7 +35,6 @@
                     </table>
           </div>
 </div>
-
 
 
 <div id="tempat-modal"></div>
