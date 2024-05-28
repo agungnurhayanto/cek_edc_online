@@ -17,10 +17,20 @@ var MyTable2 = $('#list-data2').dataTable({
           "autoWidth": false
 });
 
+var MyTable3 = $('#list-data3').dataTable({
+          "paging": true,
+          "lengthChange": true,
+          "searching": true,
+          "ordering": true,
+          "info": true,
+          "autoWidth": false
+});
+
 
 window.onload = function() {
           tampilReport();
           tampilReport2();
+          tampilReport3();
 
           <?php
           if ($this->session->flashdata('msg') != '') {
@@ -28,7 +38,6 @@ window.onload = function() {
           }
           ?>
 }
-
 
 function refresh() {
           MyTable = $('#list-data').dataTable();
@@ -38,7 +47,9 @@ function refresh2() {
           MyTable2 = $('#list-data2').dataTable();
 }
 
-
+function refresh3() {
+          MyTable3 = $('#list-data3').dataTable();
+}
 
 function effect_msg_form() {
           // $('.form-msg').hide();
@@ -55,22 +66,6 @@ function effect_msg() {
                     $('.msg').fadeOut(1000);
           }, 3000);
 }
-
-// function tampilReport() {
-//           $.get('<?php echo base_url('Report/tampil'); ?>', function(data) {
-//                     MyTable.fnDestroy();
-//                     $('#data-report').html(data);
-//                     refresh();
-//           });
-// }
-
-// function tampilReport2() {
-//           $.get('<?php echo base_url('Report/tampil2'); ?>', function(data) {
-//                     MyTable2.fnDestroy();
-//                     $('#data-report2').html(data);
-//                     refresh2();
-//           });
-// }
 
 function tampilReport() {
           $.ajax({
@@ -94,6 +89,19 @@ function tampilReport2() {
                               MyTable2.fnDestroy();
                               $('#data-report2').html(data);
                               refresh2();
+                    }
+          });
+}
+
+function tampilReport3() {
+          $.ajax({
+                    url: '<?php echo base_url('Report/tampil3'); ?>',
+                    type: 'GET',
+                    cache: true, // Menambah cache di AJAX call
+                    success: function(data) {
+                              MyTable3.fnDestroy();
+                              $('#data-report3').html(data);
+                              refresh3();
                     }
           });
 }

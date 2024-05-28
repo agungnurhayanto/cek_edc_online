@@ -15,7 +15,8 @@ class Home extends AUTH_Controller
 		$bca_online          = $this->M_data->online_bca_rows();
 		$bca_offline         = $this->M_data->offline_bca_rows();
 		$bca_edc_rusak       = $this->M_data->offline_bca_rusak();
-		$bca_offline_total   = $bca_offline - $bca_edc_rusak;  // Menghitung total
+		//$bca_offline_total   = $bca_offline - $bca_edc_rusak;  // Menghitung total
+		$bca_offline_total   = $all_toko - $bca_online - $bca_edc_rusak;
 
 		$data['all_toko']         = $all_toko;
 		$data['bca_online']       = $bca_online;

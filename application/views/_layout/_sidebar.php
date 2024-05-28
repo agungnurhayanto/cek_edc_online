@@ -42,9 +42,9 @@
                               <li <?php if ($page == 'report') {
                          echo 'class="active"';
                     } ?>>
-                                        <a href="<?php echo base_url(); ?>">
+                                        <a href="<?php echo base_url('Report/index3'); ?>">
                                                   <i class="fa fa-server"></i>
-                                                  <span>Comming Soon</span>
+                                                  <span>Report Detail Trx</span>
                                         </a>
                               </li>
 

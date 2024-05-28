@@ -31,6 +31,17 @@ class Report extends AUTH_Controller
 		$this->template->views('report/home2', $data);
 	}
 
+	public function index3()
+	{
+		$data['userdata'] = $this->userdata;
+		$data['page'] = "EDC TRACKING TRX";
+		$data['judul'] = "Data Trx Harian Edc";
+		$data['deskripsi'] = "Report Dashboard Edc Online";
+		$data['dataReportTrx'] = $this->M_data->bca_online();
+
+		$this->template->views('report/home3', $data);
+	}
+
 	public function tampil()
 	{
 		$data['BcaOnline'] = $this->M_data->bca_online();
@@ -52,17 +63,34 @@ class Report extends AUTH_Controller
 		$this->load->view('report/list_data2', $data);
 	}
 
-
-	public function detail()
+	public function tampil3()
 	{
-		$data['userdata'] 	= $this->userdata;
+		$data['trackingTrx'] = $this->M_data->trackingTrx();
 
-		$id 				= trim($_POST['id']);
-		$data['dataReport'] = $this->M_data->select_by_id($id);
+		foreach ($data['trackingTrx'] as &$row) {
+			foreach ($row['status'] as &$status) {
+				if ($status != 'Off') {
+					$status = 'On';
+				}
+			}
+		}
 
-
-		echo show_my_modal('modals/modal_detail_report', 'detail-report', $data, 'lg');
+		$this->load->view('report/list_data3', $data);
 	}
+
+
+
+
+	// public function detail()
+	// {
+	// 	$data['userdata'] 	= $this->userdata;
+
+	// 	$id 				= trim($_POST['id']);
+	// 	$data['dataReport'] = $this->M_data->select_by_id($id);
+
+
+	// 	echo show_my_modal('modals/modal_detail_report', 'detail-report', $data, 'lg');
+	// }
 
 	public function export()
 	{
@@ -79,14 +107,18 @@ class Report extends AUTH_Controller
 
 		$objPHPExcel->getActiveSheet()->SetCellValue('A' . $rowCount, "kdtk");
 		$objPHPExcel->getActiveSheet()->SetCellValue('B' . $rowCount, "Nama Toko");
-		$objPHPExcel->getActiveSheet()->SetCellValue('C' . $rowCount, "Status");
+		$objPHPExcel->getActiveSheet()->SetCellValue('C' . $rowCount, "Am");
+		$objPHPExcel->getActiveSheet()->SetCellValue('D' . $rowCount, "As");
+		$objPHPExcel->getActiveSheet()->SetCellValue('E' . $rowCount, "Status");
 
 		$rowCount++;
 
 		foreach ($data as $value) {
 			$objPHPExcel->getActiveSheet()->SetCellValue('A' . $rowCount, $value['kdtk']);
 			$objPHPExcel->getActiveSheet()->SetCellValue('B' . $rowCount, $value['nama_toko']);
-			$objPHPExcel->getActiveSheet()->SetCellValue('C' . $rowCount, $value['status']);
+			$objPHPExcel->getActiveSheet()->SetCellValue('C' . $rowCount, $value['am']);
+			$objPHPExcel->getActiveSheet()->SetCellValue('D' . $rowCount, $value['as']);
+			$objPHPExcel->getActiveSheet()->SetCellValue('E' . $rowCount, $value['status']);
 
 			$rowCount++;
 		}
@@ -97,6 +129,66 @@ class Report extends AUTH_Controller
 		$this->load->helper('download');
 		force_download('./assets/excel/Data Edc Online.xlsx', NULL);
 	}
+
+	public function export_tracking()
+	{
+		error_reporting(E_ALL);
+
+		include_once './assets/phpexcel/Classes/PHPExcel.php';
+		$objPHPExcel = new PHPExcel();
+
+		// Panggil fungsi trackingTrx untuk mendapatkan data
+		$tracking_data = $this->M_data->trackingTrx();
+
+		$objPHPExcel->setActiveSheetIndex(0);
+		$rowCount = 1;
+
+		$objPHPExcel->getActiveSheet()->setCellValue('A' . $rowCount, "No");
+		$objPHPExcel->getActiveSheet()->setCellValue('B' . $rowCount, "Kdtk");
+		$objPHPExcel->getActiveSheet()->setCellValue('C' . $rowCount, "Nama Toko");
+
+		// Menambahkan tanggal sebagai header kolom
+		$first_day = 1;
+		$current_day = date('j', strtotime('-1 day'));
+
+
+
+
+		for ($day = $first_day; $day <= $current_day; $day++) {
+			$columnIndex = $day + 2; // 2 kolom sebelumnya adalah untuk "No", "Kdtk", dan "Nama Toko"
+			$objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($columnIndex, $rowCount, $day);
+		}
+
+		$rowCount++;
+
+		// Loop melalui data yang dihasilkan oleh trackingTrx
+		$no = 1;
+		foreach ($tracking_data as $data) {
+			$objPHPExcel->getActiveSheet()->setCellValue('A' . $rowCount, $no++);
+			$objPHPExcel->getActiveSheet()->setCellValue('B' . $rowCount, $data['kdtk']);
+			$objPHPExcel->getActiveSheet()->setCellValue('C' . $rowCount, $data['nama_toko']);
+
+			$col = 3;
+
+			for ($day = $first_day; $day <= $current_day; $day++) {
+				// Mengisi status sesuai dengan kolom tanggal
+				$status = isset($data['status'][$day]) ? $data['status'][$day] : '';
+				$objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow($col++, $rowCount, $status);
+			}
+
+			$rowCount++;
+		}
+
+		// Menyimpan file Excel
+		$objWriter = new PHPExcel_Writer_Excel2007($objPHPExcel);
+		$objWriter->save('./assets/excel/Data Edc PerDays.xlsx');
+
+		// Mendownload file Excel yang telah dibuat
+		$this->load->helper('download');
+		force_download('./assets/excel/Data Edc PerDays.xlsx', NULL);
+	}
+
+
 
 	public function export_rusak()
 	{
