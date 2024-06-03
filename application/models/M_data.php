@@ -55,22 +55,80 @@ class M_data extends CI_Model
 	// 	return $online_count;
 	// }
 
+	// public function online_bca_rows()
+	// {
+	// 	$bulan_tahun = date('mY');
+	// 	$trxEdc = 'EDC' . $bulan_tahun;
+
+	// 	$second_db = $this->load->database('server_2', TRUE);
+	// 	$subquery = $second_db->query("SELECT DISTINCT toko
+	//  FROM $trxEdc 
+	// --  WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
+	//  WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+	//  AND TID != ' '
+	//  AND kode_bank = 'B01'");
+
+	// 	$toko_data = $subquery->result_array();
+	// 	$kd_toko_array = array();
+
+	// 	foreach ($toko_data as $toko) {
+	// 		$kd_toko_array[] = $toko['toko'];
+	// 	}
+
+	// 	$kd_toko_string = implode("','", $kd_toko_array);
+
+	// 	$query = $this->db->query("SELECT * FROM master_toko");
+	// 	$master_toko_data = $query->result_array();
+
+	// 	// Query untuk mendapatkan toko yang rusak fisik dari tabel edc_rusak
+	// 	$edc_rusak_query = $this->db->query("SELECT DISTINCT kdtk FROM edc_rusak");
+	// 	$edc_rusak_data = $edc_rusak_query->result_array();
+	// 	$edc_rusak_array = array();
+
+	// 	foreach ($edc_rusak_data as $rusak) {
+	// 		$edc_rusak_array[] = $rusak['kdtk'];
+	// 	}
+
+	// 	$online_count = 0;
+
+	// 	foreach ($master_toko_data as $toko) {
+	// 		if (in_array($toko['kdtk'], $kd_toko_array) && !in_array($toko['kdtk'], $edc_rusak_array)) {
+	// 			$online_count++;
+	// 		}
+	// 	}
+
+	// 	return $online_count;
+	// }
+
 	public function online_bca_rows()
 	{
-		$bulan_tahun = date('mY');
-		$trxEdc = 'EDC' . $bulan_tahun;
+		$bulan_tahun_sekarang = date('mY');
+		$bulan_tahun_sebelumnya = date('mY', strtotime('-1 month'));
+		$trxEdcSekarang = 'EDC' . $bulan_tahun_sekarang;
+		$trxEdcSebelumnya = 'EDC' . $bulan_tahun_sebelumnya;
 
 		$second_db = $this->load->database('server_2', TRUE);
-		$subquery = $second_db->query("SELECT DISTINCT toko
-           FROM $trxEdc 
-          --  WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
+
+		// Query untuk bulan sekarang
+		$subquery_sekarang = $second_db->query("SELECT DISTINCT toko
+           FROM $trxEdcSekarang
            WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-	 AND TID != ' '
+           AND TID != ' '
            AND kode_bank = 'B01'");
 
-		$toko_data = $subquery->result_array();
-		$kd_toko_array = array();
+		// Query untuk bulan sebelumnya
+		$subquery_sebelumnya = $second_db->query("SELECT DISTINCT toko
+           FROM $trxEdcSebelumnya
+           WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+           AND TID != ' '
+           AND kode_bank = 'B01'");
 
+		// Gabungkan hasil dari kedua query
+		$toko_data_sekarang = $subquery_sekarang->result_array();
+		$toko_data_sebelumnya = $subquery_sebelumnya->result_array();
+		$toko_data = array_merge($toko_data_sekarang, $toko_data_sebelumnya);
+
+		$kd_toko_array = array();
 		foreach ($toko_data as $toko) {
 			$kd_toko_array[] = $toko['toko'];
 		}
@@ -101,54 +159,191 @@ class M_data extends CI_Model
 	}
 
 
+
+	// public function offline_bca_rows()
+	// {
+	// 	$bulan_tahun = date('mY');
+	// 	$trxEdc = 'EDC' . $bulan_tahun;
+
+	// 	$second_db = $this->load->database('server_2', TRUE);
+	// 	$subquery = $second_db->query("SELECT DISTINCT toko
+	//      FROM $trxEdc 
+	// --      WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
+	//      WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+	//      AND TID != ' '
+	//      AND kode_bank = 'B01'");
+
+	// 	$toko_data = $subquery->result_array();
+	// 	$kd_toko_array = array();
+
+	// 	foreach ($toko_data as $toko) {
+	// 		$kd_toko_array[] = $toko['toko'];
+	// 	}
+
+	// 	if (!empty($kd_toko_array)) {
+	// 		$kd_toko_string = implode("','", $kd_toko_array);
+	// 		$query = $this->db->query("SELECT * FROM master_toko WHERE kdtk NOT IN ('$kd_toko_string')");
+	// 		$offline_count = $query->num_rows();
+	// 	} else {
+	// 		$offline_count = 0;
+	// 	}
+
+	// 	return $offline_count;
+	// }
+
 	public function offline_bca_rows()
 	{
-		$bulan_tahun = date('mY');
-		$trxEdc = 'EDC' . $bulan_tahun;
+		$bulan_tahun_sekarang = date('mY');
+		$bulan_tahun_sebelumnya = date('mY', strtotime('-1 month'));
+		$trxEdcSekarang = 'EDC' . $bulan_tahun_sekarang;
+		$trxEdcSebelumnya = 'EDC' . $bulan_tahun_sebelumnya;
 
 		$second_db = $this->load->database('server_2', TRUE);
-		$subquery = $second_db->query("SELECT DISTINCT toko
-               FROM $trxEdc 
-          --      WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
-               WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-	     AND TID != ' '
-               AND kode_bank = 'B01'");
 
-		$toko_data = $subquery->result_array();
+		// Query untuk bulan sekarang
+		$subquery_sekarang = $second_db->query("SELECT DISTINCT toko
+       FROM $trxEdcSekarang
+       WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+       AND TID != ' '
+       AND kode_bank = 'B01'");
+
+		// Query untuk bulan sebelumnya
+		$subquery_sebelumnya = $second_db->query("SELECT DISTINCT toko
+       FROM $trxEdcSebelumnya
+       WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+       AND TID != ' '
+       AND kode_bank = 'B01'");
+
+		// Gabungkan hasil dari kedua query
+		$toko_data_sekarang = $subquery_sekarang->result_array();
+		$toko_data_sebelumnya = $subquery_sebelumnya->result_array();
+		$toko_data = array_merge($toko_data_sekarang, $toko_data_sebelumnya);
+
 		$kd_toko_array = array();
-
 		foreach ($toko_data as $toko) {
 			$kd_toko_array[] = $toko['toko'];
 		}
 
-		if (!empty($kd_toko_array)) {
-			$kd_toko_string = implode("','", $kd_toko_array);
-			$query = $this->db->query("SELECT * FROM master_toko WHERE kdtk NOT IN ('$kd_toko_string')");
-			$offline_count = $query->num_rows();
-		} else {
-			$offline_count = 0;
+		// Query untuk mendapatkan toko yang rusak fisik dari tabel edc_rusak
+		$edc_rusak_query = $this->db->query("SELECT DISTINCT kdtk FROM edc_rusak");
+		$edc_rusak_data = $edc_rusak_query->result_array();
+		$edc_rusak_array = array();
+
+		foreach ($edc_rusak_data as $rusak) {
+			$edc_rusak_array[] = $rusak['kdtk'];
+		}
+
+		// Query untuk mendapatkan semua toko dari master_toko
+		$query = $this->db->query("SELECT * FROM master_toko");
+		$master_toko_data = $query->result_array();
+
+		$offline_count = 0;
+
+		foreach ($master_toko_data as $toko) {
+			if (!in_array($toko['kdtk'], $kd_toko_array) && !in_array($toko['kdtk'], $edc_rusak_array)) {
+				$offline_count++;
+			}
 		}
 
 		return $offline_count;
 	}
 
 
+
+	// public function bca_online()
+	// {
+	// 	$bulan_tahun = date('mY');
+	// 	$trxEdc = 'EDC' . $bulan_tahun;
+
+	// 	$second_db = $this->load->database('server_2', TRUE);
+	// 	$subquery = $second_db->query("SELECT DISTINCT toko
+	//  FROM $trxEdc 
+	// --  WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
+	// WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+	//  AND TID != ' '
+	//  AND kode_bank = 'B01'");
+
+	// 	$toko_data = $subquery->result_array();
+	// 	$kd_toko_array = array();
+
+	// 	foreach ($toko_data as $toko) {
+	// 		$kd_toko_array[] = $toko['toko'];
+	// 	}
+
+	// 	$kd_toko_string = implode("','", $kd_toko_array);
+
+	// 	$query = $this->db->query("SELECT * FROM master_toko");
+	// 	$master_toko_data = $query->result_array();
+
+	// 	// Query untuk mendapatkan toko yang rusak fisik dari tabel edc_rusak
+	// 	$edc_rusak_query = $this->db->query("SELECT DISTINCT kdtk FROM edc_rusak");
+	// 	$edc_rusak_data = $edc_rusak_query->result_array();
+	// 	$edc_rusak_array = array();
+
+	// 	foreach ($edc_rusak_data as $rusak) {
+	// 		$edc_rusak_array[] = $rusak['kdtk'];
+	// 	}
+
+	// 	$result = array();
+
+	// 	foreach ($master_toko_data as $toko) {
+	// 		$status = 'Offline'; // Default status offline
+
+	// 		if (in_array($toko['kdtk'], $edc_rusak_array)) {
+	// 			$status = 'Rusak Fisik Edc';
+	// 		} elseif (in_array($toko['kdtk'], $kd_toko_array)) {
+	// 			$status = 'Online';
+	// 		}
+
+	// 		$result[] = array(
+	// 			'kdtk' => $toko['kdtk'],
+	// 			'nama_toko' => $toko['nama_toko'],
+	// 			'am' => $toko['am'],
+	// 			'as' => $toko['as'],
+	// 			'status' => $status
+	// 		);
+	// 	}
+
+	// 	// sortir keterangan 
+	// 	usort($result, function ($a, $b) {
+	// 		if ($a['status'] == $b['status']) {
+	// 			return 0;
+	// 		}
+	// 		return ($a['status'] == 'Rusak Fisik Edc') ? -1 : 1;
+	// 	});
+
+	// 	return $result;
+	// }
+
 	public function bca_online()
 	{
-		$bulan_tahun = date('mY');
-		$trxEdc = 'EDC' . $bulan_tahun;
+		$bulan_tahun_sekarang = date('mY');
+		$bulan_tahun_sebelumnya = date('mY', strtotime('-1 month'));
+		$trxEdcSekarang = 'EDC' . $bulan_tahun_sekarang;
+		$trxEdcSebelumnya = 'EDC' . $bulan_tahun_sebelumnya;
 
 		$second_db = $this->load->database('server_2', TRUE);
-		$subquery = $second_db->query("SELECT DISTINCT toko
-           FROM $trxEdc 
-          --  WHERE tanggal_sales IN (CURDATE(), DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY))
-          WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-	 AND TID != ' '
-           AND kode_bank = 'B01'");
 
-		$toko_data = $subquery->result_array();
+		// Query untuk bulan sekarang
+		$subquery_sekarang = $second_db->query("SELECT DISTINCT toko
+       FROM $trxEdcSekarang
+       WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+       AND TID != ' '
+       AND kode_bank = 'B01'");
+
+		// Query untuk bulan sebelumnya
+		$subquery_sebelumnya = $second_db->query("SELECT DISTINCT toko
+       FROM $trxEdcSebelumnya
+       WHERE tanggal_sales >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+       AND TID != ' '
+       AND kode_bank = 'B01'");
+
+		// Gabungkan hasil dari kedua query
+		$toko_data_sekarang = $subquery_sekarang->result_array();
+		$toko_data_sebelumnya = $subquery_sebelumnya->result_array();
+		$toko_data = array_merge($toko_data_sekarang, $toko_data_sebelumnya);
+
 		$kd_toko_array = array();
-
 		foreach ($toko_data as $toko) {
 			$kd_toko_array[] = $toko['toko'];
 		}
@@ -197,6 +392,9 @@ class M_data extends CI_Model
 
 		return $result;
 	}
+
+
+
 
 
 	public function trackingTrx()
