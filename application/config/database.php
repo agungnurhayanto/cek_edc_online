@@ -75,7 +75,7 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => '192.168.36.229',
+	'hostname' => '',
 	'username' => 'admin',
 	'password' => '123456',
 	'database' => 'poscabang',
@@ -97,9 +97,9 @@ $db['default'] = array(
 
 $db['server_2'] = array(
 	'dsn'	=> '',
-	'hostname' => '192.168.36.117',
-	'username' => 'eisg026',
-	'password' => 'c@BQ1TsOk3L@H',
+	'hostname' => '',
+	'username' => '',
+	'password' => '',
 	'database' => 'indomaret',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
